@@ -1,0 +1,1 @@
+O teorema CAP afirma que, diante de uma particao de rede, um sistema distribuido precisa escolher entre consistencia e disponibilidade. Como particoes acontecem de fato, a escolha real e entre C e A.

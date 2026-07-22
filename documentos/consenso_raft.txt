@@ -1,0 +1,1 @@
+Raft e um algoritmo de consenso baseado em eleicao de lider e log replicado. Uma operacao e confirmada quando a maioria dos nos registra. Exigir maioria impede a existencia de dois lideres ao mesmo tempo.

@@ -1,0 +1,1 @@
+Um sistema distribuido e um conjunto de computadores independentes que cooperam e se apresentam ao usuario como um sistema unico. O principal desafio e a falha parcial: uma parte pode falhar enquanto o resto continua.

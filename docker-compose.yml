@@ -1,0 +1,7 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  # TAREFA 4: acrescente aqui os tres servicos (ingestao, recuperacao, geracao)
+  # depois de escrever um Dockerfile para cada um.
