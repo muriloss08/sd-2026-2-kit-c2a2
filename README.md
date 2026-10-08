@@ -8,17 +8,17 @@ O objetivo deste projeto é implementar uma arquitetura de **RAG (Retrieval-Augm
 
 A aplicação é composta pelos seguintes componentes:
 
-- **Ingestão** — responsável por receber e persistir os documentos utilizados pelo sistema.
-- **Recuperação** — responsável por realizar a busca por similaridade utilizando TF-IDF e similaridade de cosseno.
-- **Geração** — responsável por receber a pergunta, solicitar a recuperação dos documentos e gerar a resposta utilizando o contexto recuperado.
-- **Worker** — responsável por consumir mensagens da fila Redis e realizar a comunicação com o serviço de recuperação.
-- **Redis** — utilizado como mecanismo de mensageria e armazenamento temporário das respostas.
-- **Circuit Breaker** — utilizado para proteger a comunicação com o serviço de LLM.
-- **Docker Compose** — utilizado para executar todos os componentes da arquitetura de forma integrada.
+- Ingestão — responsável por receber e persistir os documentos utilizados pelo sistema.
+- Recuperação — responsável por realizar a busca por similaridade utilizando TF-IDF e similaridade de cosseno.
+- Geração — responsável por receber a pergunta, solicitar a recuperação dos documentos e gerar a resposta utilizando o contexto recuperado.
+- Worker — responsável por consumir mensagens da fila Redis e realizar a comunicação com o serviço de recuperação.
+- Redis — utilizado como mecanismo de mensageria e armazenamento temporário das respostas.
+- Circuit Breaker — utilizado para proteger a comunicação com o serviço de LLM.
+- Docker Compose — utilizado para executar todos os componentes da arquitetura de forma integrada.
 
 ### Diagrama da arquitetura
 
-```mermaid
+mermaid
 flowchart LR
     C[Cliente] --> G[Geração :8003]
     G -->|RPUSH pergunta| R[(Redis)]
