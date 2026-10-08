@@ -24,15 +24,45 @@ class Consulta(BaseModel):
 
 @app.post("/buscar")
 def buscar(consulta: Consulta):
-    """Deve devolver os top_k trechos mais parecidos com a pergunta."""
+    """Devolve os top_k trechos mais parecidos com a pergunta."""
     r = requests.get(f"{URL_INGESTAO}/indice", timeout=10)
     r.raise_for_status()
     itens = r.json()["itens"]
 
-    # TAREFA 2: vetorize a pergunta, calcule a similaridade com cada item
-    # e devolva os top_k mais parecidos.
-    # DICA: use Vetorizador + similaridade() de servicos/comum/embeddings.py
-    raise NotImplementedError("implemente a busca por similaridade")
+    if not itens:
+        return {"resultados": []}
+
+    # Cria um vetorizador com o mesmo vocabulario dos documentos.
+    vetorizador = Vetorizador()
+    textos = [item["texto"] for item in itens]
+    vetorizador.ajustar(textos)
+
+    # Transforma a pergunta em vetor.
+    vetor_pergunta = vetorizador.vetorizar(consulta.pergunta)
+
+    # Calcula a similaridade da pergunta com cada documento.
+    resultados = []
+
+    for item in itens:
+        score = similaridade(vetor_pergunta, item["vetor"])
+
+        resultados.append(
+            {
+                "texto": item["texto"],
+                "origem": item["origem"],
+                "score": score,
+            }
+        )
+
+    # Ordena do mais parecido para o menos parecido.
+    resultados.sort(key=lambda item: item["score"], reverse=True)
+
+    # Retorna somente os top_k resultados.
+    top_k = max(1, consulta.top_k)
+
+    return {
+        "resultados": resultados[:top_k]
+    }
 
 
 @app.get("/saude")

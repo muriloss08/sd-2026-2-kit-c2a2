@@ -1,7 +1,68 @@
 services:
+
   redis:
     image: redis:7-alpine
-    ports: ["6379:6379"]
+    container_name: rag-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-  # TAREFA 4: acrescente aqui os tres servicos (ingestao, recuperacao, geracao)
-  # depois de escrever um Dockerfile para cada um.
+  ingestao:
+    build:
+      context: .
+      dockerfile: servicos/ingestao/Dockerfile
+    container_name: rag-ingestao
+    ports:
+      - "8001:8001"
+    environment:
+      ARQUIVO_INDICE: /app/dados/indice.json
+    volumes:
+      - ./dados:/app/dados
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  recuperacao:
+    build:
+      context: .
+      dockerfile: servicos/recuperacao/Dockerfile
+    container_name: rag-recuperacao
+    ports:
+      - "8002:8002"
+    environment:
+      URL_INGESTAO: http://ingestao:8001
+    depends_on:
+      - ingestao
+
+  worker:
+    build:
+      context: .
+      dockerfile: servicos/worker/Dockerfile
+    container_name: rag-worker
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      URL_RECUPERACAO: http://recuperacao:8002
+    depends_on:
+      - redis
+      - recuperacao
+
+  geracao:
+    build:
+      context: .
+      dockerfile: servicos/geracao/Dockerfile
+    container_name: rag-geracao
+    ports:
+      - "8003:8003"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_API_URL: ${LLM_API_URL:-}
+      LLM_MODELO: ${LLM_MODELO:-}
+      LLM_TIMEOUT: ${LLM_TIMEOUT:-30}
+    depends_on:
+      - redis
+      - worker

@@ -9,3 +9,12 @@ venv/
 *_pb2_grpc.py
 .pytest_cache/
 .DS_Store
+
+# Arquivos temporarios do Python
+__pycache__/
+*.pyc
+
+# Dados gerados durante a execucao
+dados/
+indice.json
+*.bak
