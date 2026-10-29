@@ -8,17 +8,17 @@ O objetivo deste projeto é implementar uma arquitetura de **RAG (Retrieval-Augm
 
 A aplicação é composta pelos seguintes componentes:
 
-- Ingestão — responsável por receber e persistir os documentos utilizados pelo sistema.
-- Recuperação — responsável por realizar a busca por similaridade utilizando TF-IDF e similaridade de cosseno.
-- Geração — responsável por receber a pergunta, solicitar a recuperação dos documentos e gerar a resposta utilizando o contexto recuperado.
-- Worker — responsável por consumir mensagens da fila Redis e realizar a comunicação com o serviço de recuperação.
-- Redis — utilizado como mecanismo de mensageria e armazenamento temporário das respostas.
-- Circuit Breaker — utilizado para proteger a comunicação com o serviço de LLM.
-- Docker Compose — utilizado para executar todos os componentes da arquitetura de forma integrada.
+- **Ingestão:** responsável por receber e persistir os documentos utilizados pelo sistema.
+- **Recuperação:** responsável por realizar a busca por similaridade utilizando TF-IDF e similaridade de cosseno.
+- **Geração:** responsável por receber a pergunta, solicitar a recuperação dos documentos e gerar a resposta utilizando o contexto recuperado.
+- **Worker:** responsável por consumir mensagens da fila Redis e realizar a comunicação com o serviço de recuperação.
+- **Redis:** utilizado como mecanismo de mensageria e armazenamento temporário das respostas.
+- **Circuit Breaker:** utilizado para proteger a comunicação com o serviço de LLM.
+- **Docker Compose:** utilizado para executar todos os componentes da arquitetura de forma integrada.
 
 ### Diagrama da arquitetura
 
-mermaid
+```mermaid
 flowchart LR
     C[Cliente] --> G[Geração :8003]
     G -->|RPUSH pergunta| R[(Redis)]
@@ -28,9 +28,11 @@ flowchart LR
     W -->|SET resposta:id| R
     G --> CB[Circuit Breaker]
     CB --> L[LLM]
+```
 
-### 2. FLuxo da Aplicacao
-2. Fluxo da aplicação
+---
+
+## 2. Fluxo da Aplicação
 
 O funcionamento da aplicação ocorre através de uma sequência de comunicação entre os microsserviços.
 
@@ -45,57 +47,63 @@ Após identificar os documentos mais relevantes, o Worker armazena o resultado t
 Antes de realizar a chamada ao LLM, o serviço de Geração utiliza o Circuit Breaker para controlar possíveis falhas.
 
 Finalmente, a resposta gerada é devolvida ao cliente.
+
+```text
 Cliente
-   |
+   │
    v
 Geração
-   |
+   │
    v
 Redis - fila:perguntas
-   |
+   │
    v
 Worker
-   |
+   │
    v
 Recuperação
-   |
+   │
    v
 Ingestão
-   |
+   │
    v
 Índice persistido
 
 Worker
-   |
+   │
    v
 Redis - resultado
-   |
+   │
    v
 Geração
-   |
+   │
    v
 Circuit Breaker
-   |
+   │
    v
 LLM
-   |
+   │
    v
 Resposta ao cliente
+```
 
-### 3. Serviço de Ingestão
+---
 
-O serviço de Ingestão é executado na porta 8001.
+## 3. Serviço de Ingestão
+
+O serviço de Ingestão é executado na porta `8001`.
 
 Sua principal função é receber os documentos utilizados pela aplicação e manter o índice de documentos.
 
 O serviço possui o endpoint:
 
-POST /indexar
+`POST /indexar`
 
 O endpoint recebe uma lista de documentos contendo o texto e sua origem.
 
 Exemplo:
 
+```json
 [
   {
     "texto": "A computacao em nuvem permite executar recursos de processamento pela internet.",
@@ -106,32 +114,38 @@ Exemplo:
     "origem": "aula2.txt"
   }
 ]
+```
 
 O índice é armazenado no arquivo:
 
-dados/indice.json
+`dados/indice.json`
 
 O serviço também possui um endpoint de saúde:
 
-GET /saude
+`GET /saude`
 
 Esse endpoint permite verificar se o serviço está funcionando e quantos documentos estão atualmente indexados.
-### 4. Serviço de Recuperação
 
-O serviço de Recuperação é executado na porta 8002.
+---
+
+## 4. Serviço de Recuperação
+
+O serviço de Recuperação é executado na porta `8002`.
 
 Sua função é receber uma pergunta e encontrar os documentos mais semelhantes disponíveis no índice.
 
 O endpoint utilizado é:
 
-POST /buscar
+`POST /buscar`
 
 Exemplo de requisição:
 
+```json
 {
   "pergunta": "O que é computacao em nuvem?",
   "top_k": 2
 }
+```
 
 O serviço realiza a vetorização dos documentos utilizando TF-IDF e calcula a similaridade de cosseno entre a pergunta e cada documento.
 
@@ -139,21 +153,25 @@ Os resultados são ordenados de acordo com o score de similaridade.
 
 Dessa forma, os documentos mais relevantes são enviados para o serviço de Geração para serem utilizados como contexto.
 
-5. Serviço de Geração
+---
 
-O serviço de Geração é executado na porta 8003.
+## 5. Serviço de Geração
+
+O serviço de Geração é executado na porta `8003`.
 
 Esse serviço é responsável por coordenar o processo de geração da resposta.
 
 O endpoint principal é:
 
-POST /perguntar
+`POST /perguntar`
 
 Exemplo:
 
+```json
 {
   "pergunta": "O que é computacao em nuvem?"
 }
+```
 
 Ao receber a pergunta, o serviço envia uma tarefa para a fila do Redis.
 
@@ -163,7 +181,9 @@ Quando o resultado da recuperação é recebido, os documentos encontrados são 
 
 O serviço então realiza a chamada ao LLM utilizando o Circuit Breaker e retorna a resposta final ao cliente.
 
-### 6. Worker
+---
+
+## 6. Worker
 
 O Worker é responsável pelo processamento assíncrono das solicitações.
 
@@ -171,59 +191,67 @@ Ele não possui uma porta HTTP própria.
 
 O Worker permanece aguardando mensagens na fila:
 
-fila:perguntas
+`fila:perguntas`
 
 Quando uma mensagem é recebida, o Worker:
 
-Lê a pergunta enviada pelo serviço de Geração.
-Envia a pergunta para o serviço de Recuperação.
-Recebe os documentos mais relevantes.
-Armazena o resultado temporariamente no Redis.
-Permite que o serviço de Geração recupere o resultado.
+- Lê a pergunta enviada pelo serviço de Geração.
+- Envia a pergunta para o serviço de Recuperação.
+- Recebe os documentos mais relevantes.
+- Armazena o resultado temporariamente no Redis.
+- Permite que o serviço de Geração recupere o resultado.
 
 Essa abordagem permite que a recuperação seja realizada por meio de mensageria, evitando uma chamada direta entre Geração e Recuperação.
 
-### 7. Mensageria com Redis
+---
+
+## 7. Mensageria com Redis
 
 O Redis foi utilizado como mecanismo de mensageria entre os componentes.
 
 A fila utilizada é:
 
-fila:perguntas
+`fila:perguntas`
 
-O serviço de Geração adiciona novas tarefas na fila utilizando RPUSH.
+O serviço de Geração adiciona novas tarefas na fila utilizando `RPUSH`.
 
-O Worker remove e processa as tarefas utilizando BLPOP.
+O Worker remove e processa as tarefas utilizando `BLPOP`.
 
 Após realizar a recuperação dos documentos, o Worker armazena o resultado temporariamente em uma chave do Redis:
 
-resposta:<id>
+`resposta:<id>`
 
 O serviço de Geração utiliza esse identificador para localizar o resultado correspondente à pergunta enviada.
 
 Essa implementação demonstra comunicação assíncrona utilizando uma fila de mensagens.
 
-### 8. Persistência do índice
+---
+
+## 8. Persistência do Índice
 
 Uma das funcionalidades implementadas no projeto foi a persistência do índice de documentos.
 
 O índice é armazenado em:
 
-dados/indice.json
+`dados/indice.json`
 
-No Docker Compose, o diretório local ./dados é montado no container utilizado pelo serviço de Ingestão.
+No Docker Compose, o diretório local `./dados` é montado no container utilizado pelo serviço de Ingestão.
 
 Isso permite que os dados permaneçam armazenados mesmo quando o container é reiniciado.
 
 Durante os testes, o serviço de Ingestão foi reiniciado utilizando:
 
+```bash
 docker compose restart ingestao
+```
 
 Após o reinício, os documentos anteriormente indexados continuaram disponíveis.
 
 Esse teste confirmou o funcionamento da persistência do índice.
 
-### 9. Busca por similaridade
+---
+
+## 9. Busca por Similaridade
 
 A busca dos documentos utiliza TF-IDF.
 
@@ -237,15 +265,18 @@ Por exemplo, uma pergunta relacionada a computação em nuvem apresenta maior si
 
 O mecanismo utilizado está implementado no arquivo:
 
-servicos/comum/embeddings.py
-### 10. Circuit Breaker
+`servicos/comum/embeddings.py`
+
+---
+
+## 10. Circuit Breaker
 
 O serviço de Geração utiliza o padrão Circuit Breaker para proteger a comunicação com o LLM.
 
 A configuração utilizada é:
 
-Limite de falhas: 3
-Tempo de espera: 20 segundos
+- **Limite de falhas:** 3
+- **Tempo de espera:** 20 segundos
 
 Quando ocorrem três falhas consecutivas na chamada ao LLM, o Circuit Breaker muda seu estado para aberto.
 
@@ -255,22 +286,24 @@ Esse mecanismo evita que a aplicação continue realizando chamadas para um serv
 
 O estado do Circuit Breaker pode ser consultado através do endpoint:
 
-GET /saude
+`GET /saude`
 
 Também foi realizado um teste simulando três falhas consecutivas. Após a terceira falha, o circuito foi aberto e a chamada seguinte foi recusada.
 
-###  11. LLM
+---
+
+## 11. LLM
 
 O projeto possui suporte à configuração de um LLM por meio de variáveis de ambiente.
 
 As principais variáveis utilizadas são:
 
-LLM_API_KEY
-LLM_API_URL
-LLM_MODELO
-LLM_TIMEOUT
+- `LLM_API_KEY`
+- `LLM_API_URL`
+- `LLM_MODELO`
+- `LLM_TIMEOUT`
 
-Durante os testes, a variável LLM_API_KEY não foi configurada.
+Durante os testes, a variável `LLM_API_KEY` não foi configurada.
 
 Nesse cenário, o código-base utiliza um modo simulado, permitindo testar o funcionamento do RAG sem depender de uma API externa.
 
@@ -278,14 +311,17 @@ O modo simulado gera uma resposta utilizando a pergunta recebida e os documentos
 
 Nenhuma chave de API é armazenada diretamente no código-fonte.
 
-### 12. Docker
+---
+
+## 12. Docker
 
 A aplicação foi preparada para execução utilizando Docker e Docker Compose.
 
-Cada serviço possui seu próprio Dockerfile.
+Cada serviço possui seu próprio `Dockerfile`.
 
 A estrutura é:
 
+```text
 servicos/
 ├── ingestao/
 │   └── Dockerfile
@@ -295,39 +331,63 @@ servicos/
 │   └── Dockerfile
 └── worker/
     └── Dockerfile
+```
 
 O Redis utiliza a imagem:
 
-redis:7-alpine
+`redis:7-alpine`
 
 Toda a arquitetura pode ser iniciada com:
 
+```bash
 docker compose up -d --build
+```
 
 Para verificar o estado dos containers:
 
+```bash
 docker compose ps
+```
 
 Os principais containers utilizados são:
 
-rag-ingestao
-rag-recuperacao
-rag-geracao
-rag-worker
-rag-redis
+- `rag-ingestao`
+- `rag-recuperacao`
+- `rag-geracao`
+- `rag-worker`
+- `rag-redis`
 
-## 13. Execução e testes
-Iniciar a aplicação
+---
+
+## 13. Execução e Testes
+
+### Iniciar a aplicação
+```bash
 docker compose up -d --build
-Verificar os containers
+```
+
+### Verificar os containers
+```bash
 docker compose ps
-Verificar o serviço de Ingestão
+```
+
+### Verificar o serviço de Ingestão
+```bash
 curl http://localhost:8001/saude
-Verificar o serviço de Recuperação
+```
+
+### Verificar o serviço de Recuperação
+```bash
 curl http://localhost:8002/saude
-Verificar o serviço de Geração
+```
+
+### Verificar o serviço de Geração
+```bash
 curl http://localhost:8003/saude
-Indexar documentos
+```
+
+### Indexar documentos
+```bash
 curl -X POST http://localhost:8001/indexar \
   -H "Content-Type: application/json" \
   -d '[
@@ -344,45 +404,59 @@ curl -X POST http://localhost:8001/indexar \
       "origem": "aula3.txt"
     }
   ]'
-Testar a recuperação
+```
+
+### Testar a recuperação
+```bash
 curl -X POST http://localhost:8002/buscar \
   -H "Content-Type: application/json" \
   -d '{
     "pergunta": "O que é computacao em nuvem?",
     "top_k": 2
   }'
-Testar o fluxo completo
+```
+
+### Testar o fluxo completo
+```bash
 curl -X POST http://localhost:8003/perguntar \
   -H "Content-Type: application/json" \
   -d '{
     "pergunta": "O que é computacao em nuvem?"
   }'
+```
 
 O resultado final apresenta a pergunta, a resposta gerada e o contexto utilizado.
 
-### 14. Validações realizadas
+---
+
+## 14. Validações Realizadas
 
 Durante o desenvolvimento foram realizados testes para verificar o funcionamento dos principais componentes.
 
 Foram validados:
 
-instalação das dependências;
-funcionamento dos microsserviços;
-persistência do índice;
-indexação dos documentos;
-busca por similaridade;
-utilização de TF-IDF;
-utilização da similaridade de cosseno;
-funcionamento da fila Redis;
-funcionamento do Worker;
-comunicação entre Worker e Recuperação;
-fluxo completo de RAG;
-execução através do Docker Compose;
-persistência após reinicialização do container;
-funcionamento do modo simulado do LLM;
-utilização de variáveis de ambiente;
-funcionamento do Circuit Breaker após falhas consecutivas.
-15. Estrutura do projeto
+- Instalação das dependências;
+- Funcionamento dos microsserviços;
+- Persistência do índice;
+- Indexação dos documentos;
+- Busca por similaridade;
+- Utilização de TF-IDF;
+- Utilização da similaridade de cosseno;
+- Funcionamento da fila Redis;
+- Funcionamento do Worker;
+- Comunicação entre Worker e Recuperação;
+- Fluxo completo de RAG;
+- Execução através do Docker Compose;
+- Persistência após reinicialização do container;
+- Funcionamento do modo simulado do LLM;
+- Utilização de variáveis de ambiente;
+- Funcionamento do Circuit Breaker após falhas consecutivas.
+
+---
+
+## 15. Estrutura do Projeto
+
+```text
 sd-2026-2-kit-c2a2/
 │
 ├── documentos/
@@ -424,24 +498,30 @@ sd-2026-2-kit-c2a2/
 ├── .gitignore
 ├── LICENSE
 └── README.md
+```
 
-### 16. Tecnologias utilizadas
-Python 3.12
-FastAPI
-Uvicorn
-Redis
-Docker
-Docker Compose
-NumPy
-Scikit-learn
-TF-IDF
-Similaridade de cosseno
-Circuit Breaker
-Microsserviços
-Mensageria assíncrona
-JSON para persistência do índice
+---
 
-### 17. Conclusão
+## 16. Tecnologias Utilizadas
+
+- Python 3.12
+- FastAPI
+- Uvicorn
+- Redis
+- Docker
+- Docker Compose
+- NumPy
+- Scikit-learn
+- TF-IDF
+- Similaridade de cosseno
+- Circuit Breaker
+- Microsserviços
+- Mensageria assíncrona
+- JSON para persistência do índice
+
+---
+
+## 17. Conclusão
 
 O projeto implementa uma arquitetura distribuída de RAG utilizando microsserviços independentes.
 
