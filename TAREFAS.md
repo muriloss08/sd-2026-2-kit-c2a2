@@ -2,23 +2,23 @@
 
 ## Nucleo obrigatorio
 
-- [ ] **1. Persistir o indice** - `servicos/ingestao/app.py`
+- [x] **1. Persistir o indice** - `servicos/ingestao/app.py`
       O indice hoje some ao reiniciar. Guarde em arquivo ou banco vetorial.
 
-- [ ] **2. Busca por similaridade** - `servicos/recuperacao/app.py`
+- [x] **2. Busca por similaridade** - `servicos/recuperacao/app.py`
       Vetorizar a pergunta, comparar com cada documento e devolver os top_k. (Aula 9/10)
 
-- [ ] **3. Circuit breaker no LLM** - `servicos/geracao/app.py`
+- [x] **3. Circuit breaker no LLM** - `servicos/geracao/app.py`
       Envolver a chamada `gerar(...)` com `disjuntor.chamar(...)` e devolver 503
       quando o circuito estiver aberto. (Aula 11)
 
-- [ ] **4. Mensageria** - novo worker + `docker-compose.yml`
+- [x] **4. Mensageria** - novo worker + `docker-compose.yml`
       Ao menos UMA etapa do fluxo deve passar por fila, e nao por chamada direta. (Aula 8)
 
-- [ ] **5. Fluxo completo** - de ponta a ponta
+- [x] **5. Fluxo completo** - de ponta a ponta
       Pergunta entra em /perguntar e sai uma resposta fundamentada nos documentos.
 
-- [x] **6. README com diagrama** da arquitetura dos tres servicos.
+- [] **6. README com diagrama** da arquitetura dos tres servicos.
 
 ## Extensoes opcionais
 
@@ -29,6 +29,6 @@
 
 ## Antes de entregar
 
-- [ ] Desligue a internet: o modo simulado do LLM mantem o sistema de pe?
-- [ ] Derrube o servico de recuperacao: o disjuntor abre como esperado?
-- [ ] A chave da API esta FORA do codigo (em variavel de ambiente)?
+- [x] Desligue a internet: o modo simulado do LLM mantem o sistema de pe?
+- [x] Derrube o servico de recuperacao: o disjuntor abre como esperado?
+- [x] A chave da API esta FORA do codigo (em variavel de ambiente)?
