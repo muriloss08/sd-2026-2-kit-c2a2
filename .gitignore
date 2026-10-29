@@ -1,20 +1,75 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-.venv/
-venv/
-.env
-*.joblib
-*.pkl
-*_pb2.py
-*_pb2_grpc.py
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.bin/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 .pytest_cache/
+cover/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Editor / IDE configurations
+.vscode/
+.idea/
+*.swp
+*.swo
 .DS_Store
 
-# Arquivos temporarios do Python
-__pycache__/
-*.pyc
+# Logs e arquivos de execucao local
+*.log
+*.bak
+*.joblib
+*.pkl
 
-# Dados gerados durante a execucao
+# Dados gerados pelo microsserviço de Ingestao (Persistencia local)
 dados/
 indice.json
-*.bak
