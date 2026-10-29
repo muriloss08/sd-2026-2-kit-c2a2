@@ -9,6 +9,7 @@ import json
 import os
 import time
 import uuid
+from typing import Any, Dict
 
 import redis
 from fastapi import FastAPI, HTTPException
@@ -42,8 +43,8 @@ class Pergunta(BaseModel):
     pergunta: str
 
 
-def enviar_para_fila(pergunta: str, top_k: int = 3):
-    """Envia uma pergunta para o worker através do Redis."""
+def enviar_para_fila(pergunta: str, top_k: int = 3) -> str:
+    """Envia uma pergunta para o worker através do Redis e retorna o ID da resposta."""
 
     resposta_id = str(uuid.uuid4())
 
@@ -61,8 +62,8 @@ def enviar_para_fila(pergunta: str, top_k: int = 3):
     return resposta_id
 
 
-def aguardar_resultado(resposta_id: str, timeout: int = 15):
-    """Aguarda o resultado produzido pelo worker."""
+def aguardar_resultado(resposta_id: str, timeout: int = 15) -> Dict[str, Any]:
+    """Aguarda o resultado produzido pelo worker consultando o Redis."""
 
     chave = f"resposta:{resposta_id}"
     inicio = time.time()
