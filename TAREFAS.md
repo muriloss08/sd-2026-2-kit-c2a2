@@ -18,7 +18,7 @@
 - [x] **5. Fluxo completo** - de ponta a ponta
       Pergunta entra em /perguntar e sai uma resposta fundamentada nos documentos.
 
-- [] **6. README com diagrama** da arquitetura dos tres servicos.
+- [x] **6. README com diagrama** da arquitetura dos tres servicos.
 
 ## Extensoes opcionais
 
