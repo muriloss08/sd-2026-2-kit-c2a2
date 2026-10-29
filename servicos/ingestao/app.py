@@ -9,6 +9,7 @@ Rodar:
 
 import json
 import os
+from typing import Any, Dict, List
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -22,7 +23,7 @@ vetorizador = Vetorizador()
 
 ARQUIVO_INDICE = os.getenv("ARQUIVO_INDICE", "indice.json")
 
-INDICE = []
+INDICE: List[Dict[str, Any]] = []
 
 
 class Documento(BaseModel):
@@ -30,7 +31,7 @@ class Documento(BaseModel):
     origem: str = "desconhecida"
 
 
-def salvar_indice():
+def salvar_indice() -> None:
     """Salva os documentos indexados em disco."""
     dados = [
         {
@@ -44,7 +45,7 @@ def salvar_indice():
         json.dump(dados, arquivo, ensure_ascii=False, indent=2)
 
 
-def carregar_indice():
+def carregar_indice() -> None:
     """Carrega o índice salvo e reconstrói os embeddings."""
     global INDICE
 
@@ -78,9 +79,7 @@ carregar_indice()
 
 
 @app.post("/indexar")
-def indexar(docs: list[Documento]):
-    textos = [d.texto for d in docs]
-
+def indexar(docs: List[Documento]) -> Dict[str, int]:
     documentos = [
         {
             "texto": d.texto,
@@ -123,7 +122,7 @@ def indexar(docs: list[Documento]):
 
 
 @app.get("/indice")
-def indice():
+def indice() -> Dict[str, Any]:
     """Consumido pelo servico de recuperacao."""
     return {
         "total": len(INDICE),
@@ -139,7 +138,7 @@ def indice():
 
 
 @app.get("/saude")
-def saude():
+def saude() -> Dict[str, Any]:
     return {
         "status": "ok",
         "documentos": len(INDICE),
