@@ -6,6 +6,7 @@ TAREFA 2: implementar a busca por similaridade.
 Rodar: uvicorn servicos.recuperacao.app:app --port 8002
 """
 import os
+from typing import Any, Dict
 
 import requests
 from fastapi import FastAPI
@@ -23,7 +24,7 @@ class Consulta(BaseModel):
 
 
 @app.post("/buscar")
-def buscar(consulta: Consulta):
+def buscar(consulta: Consulta) -> Dict[str, Any]:
     """Devolve os top_k trechos mais parecidos com a pergunta."""
     r = requests.get(f"{URL_INGESTAO}/indice", timeout=10)
     r.raise_for_status()
@@ -66,5 +67,5 @@ def buscar(consulta: Consulta):
 
 
 @app.get("/saude")
-def saude():
+def saude() -> Dict[str, str]:
     return {"status": "ok"}
