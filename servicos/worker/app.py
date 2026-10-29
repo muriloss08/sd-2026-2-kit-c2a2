@@ -8,6 +8,7 @@ import json
 import os
 import time
 import uuid
+from typing import Any, Dict
 
 import redis
 import requests
@@ -28,7 +29,7 @@ redis_client = redis.from_url(
 )
 
 
-def processar_tarefa(tarefa):
+def processar_tarefa(tarefa: Dict[str, Any]) -> None:
     """Consulta a recuperacao e grava o resultado no Redis."""
 
     pergunta = tarefa["pergunta"]
@@ -65,7 +66,8 @@ def processar_tarefa(tarefa):
     )
 
 
-def executar():
+def executar() -> None:
+    """Inicia o loop principal do worker para consumo da fila de perguntas."""
     print("Worker iniciado. Aguardando tarefas...")
 
     while True:
