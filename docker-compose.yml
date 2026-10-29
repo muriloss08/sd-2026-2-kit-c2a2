@@ -1,5 +1,9 @@
-services:
+version: "3.8"
 
+services:
+  # =====================================================================
+  # Servico de Mensageria e Cache (Redis)
+  # =====================================================================
   redis:
     image: redis:7-alpine
     container_name: rag-redis
@@ -11,6 +15,9 @@ services:
       timeout: 3s
       retries: 5
 
+  # =====================================================================
+  # Microsservico 1: Ingestao de Documentos e Persistencia
+  # =====================================================================
   ingestao:
     build:
       context: .
@@ -26,6 +33,9 @@ services:
       redis:
         condition: service_healthy
 
+  # =====================================================================
+  # Microsservico 2: Recuperacao e Busca por Similaridade
+  # =====================================================================
   recuperacao:
     build:
       context: .
@@ -38,6 +48,9 @@ services:
     depends_on:
       - ingestao
 
+  # =====================================================================
+  # Microsservico 3: Worker de Fila (Mensageria assincrona)
+  # =====================================================================
   worker:
     build:
       context: .
@@ -50,6 +63,9 @@ services:
       - redis
       - recuperacao
 
+  # =====================================================================
+  # Microsservico 4: Geracao de Respostas (Integracao com LLM e Circuit Breaker)
+  # =====================================================================
   geracao:
     build:
       context: .
